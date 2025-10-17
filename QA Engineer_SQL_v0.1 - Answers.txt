@@ -1,0 +1,171 @@
+1.List all fruits with their colours and sizes.
+
+SELECT 
+    f.Name AS FruitName,
+    c.Colour AS Colour,
+    s.Size AS Size
+FROM 
+    tblFruit f
+JOIN 
+    tblColours c ON f.ColourID = c.ColourID
+JOIN 
+    tblSizes s ON f.SizeID = s.SizeID;
+
+---
+2.Find all fruits supplied by "GreenHarvest" that are medium size.
+
+SELECT 
+    f.Name AS FruitName,
+    s.Size,
+    sup.SupplierName
+FROM 
+    tblFruit f
+JOIN 
+    tblSizes s ON f.SizeID = s.SizeID
+JOIN 
+    tblSuppliers sup ON f.SupplierID = sup.SupplierID
+WHERE 
+    sup.SupplierName = 'GreenHarvest'
+    AND s.Size = 'Medium';
+---
+3.List all countries and any fruits grown there (include countries with no fruits).
+
+SELECT 
+    c.Country,
+    f.Name AS FruitName
+FROM 
+    tblCountries c
+LEFT JOIN 
+    tblFruit f ON c.CountryID = f.CountryID;
+
+---
+4.Show all suppliers and the fruits they supply, including suppliers who currently supply no fruits.
+
+SELECT 
+    sup.SupplierName,
+    f.Name AS FruitName
+FROM 
+    tblSuppliers sup
+LEFT JOIN 
+    tblFruit f ON sup.SupplierID = f.SupplierID;
+
+---
+5.List all fruits and all suppliers, matching where possible, but showing all even if there is no match.
+
+SELECT 
+    f.Name AS FruitName,
+    sup.SupplierName
+FROM 
+    tblFruit f
+FULL OUTER JOIN 
+    tblSuppliers sup ON f.SupplierID = sup.SupplierID;
+
+---
+6.For each sale, display the fruit name, country of origin, supplier name, and sale quantity.
+
+SELECT 
+    s.SaleID,
+    f.Name AS FruitName,
+    c.Country,
+    sup.SupplierName,
+    s.Quantity
+FROM 
+    tblSales s
+JOIN 
+    tblFruit f ON s.FruitID = f.FruitID
+JOIN 
+    tblCountries c ON f.CountryID = c.CountryID
+JOIN 
+    tblSuppliers sup ON f.SupplierID = sup.SupplierID;
+
+---
+7.Which country has sold the highest total quantity of fruits?
+
+SELECT 
+    c.Country,
+    SUM(s.Quantity) AS TotalQuantity
+FROM 
+    tblSales s
+JOIN 
+    tblFruit f ON s.FruitID = f.FruitID
+JOIN 
+    tblCountries c ON f.CountryID = c.CountryID
+GROUP BY 
+    c.Country
+ORDER BY 
+    TotalQuantity DESC
+LIMIT 1;
+
+---
+8.List the names of fruits that have never been sold.
+
+SELECT 
+    f.Name AS FruitName
+FROM 
+    tblFruit f
+LEFT JOIN 
+    tblSales s ON f.FruitID = s.FruitID
+WHERE 
+    s.SaleID IS NULL;
+
+---
+9.Are there any fruits with the same colour but different sizes? List their names.
+
+SELECT 
+    c.Colour,
+    f.Name AS FruitName,
+    s.Size
+FROM 
+    tblFruit f
+JOIN 
+    tblColours c ON f.ColourID = c.ColourID
+JOIN 
+    tblSizes s ON f.SizeID = s.SizeID
+WHERE 
+    c.Colour IN (
+	    SELECT
+		    c2.Colour
+        FROM 
+            tblFruit f2
+        JOIN 
+            tblColours c2 ON f2.ColourID = c2.ColourID
+        GROUP BY 
+            c2.Colour
+        HAVING 
+            COUNT(DISTINCT f2.SizeID) > 1
+    )
+ORDER BY 
+    c.Colour, s.Size;
+---
+10.For each sale, display the sale date, fruit name, fruit colour, fruit size, country of origin, supplier name, and quantity sold. Order by sale date and fruit name.
+
+SELECT 
+    s.SaleDate,
+    f.Name AS FruitName,
+    c.Colour,
+    sz.Size,
+    co.Country,
+    sup.SupplierName,
+    s.Quantity
+FROM 
+    tblSales s
+JOIN 
+    tblFruit f ON s.FruitID = f.FruitID
+JOIN 
+    tblColours c ON f.ColourID = c.ColourID
+JOIN 
+    tblSizes sz ON f.SizeID = sz.SizeID
+JOIN 
+    tblCountries co ON f.CountryID = co.CountryID
+JOIN 
+    tblSuppliers sup ON f.SupplierID = sup.SupplierID
+ORDER BY 
+    s.SaleDate,
+    f.Name;
+
+---
+
+
+
+
+

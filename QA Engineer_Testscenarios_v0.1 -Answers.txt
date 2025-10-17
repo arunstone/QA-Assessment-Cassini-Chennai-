@@ -1,0 +1,116 @@
+Scenario :
+
+Component 1 | Accepts data from GUI or API  strips client and company specific details before sending to 
+Component 2 
+
+Component 2 | Broadcasts anonymized data to market                                                                     
+
+Component 3 | Stores the full data (with client/company info) in DB, then generates CSV client reports           
+
+---
+
+Q1: How would you identify and prioritize test cases across all components?
+
+P1 – API contract and data validation (component 1 input)
+
+P2 – End-to-end data propagation and masking (components 2 & 3)
+
+P3 – Backward compatibility with old records and legacy messages
+
+P4 – Performance and data volume (ensure new field doesn’t degrade performance)
+
+---
+
+Q2: What types of automated tests would you implement at each layer and why?
+
+GUI| Functional + Input Validation |Selenium       
+
+API | Contract, Schema, and Field Validation | Pytest + Requests                                      |
+
+Messaging (Inter-component) | Integration + Data masking             | Mock/stub queues (Kafka) + schema validators 
+
+Database | Data Integrity, Persistence | SQL queries in pytest + DB fixtures                   
+
+Reporting (CSV) | Data correctness, File structure       | Python CSV or Pandas-based validators                  
+
+---
+
+Q3:How to ensure backward compatibility and data integrity?
+
+Backward Compatibility
+
+	Existing messages without UniqCltID must still be accepted until migration complete.
+
+	Schema versioning or optional field handling in APIs.
+
+	Regression suite verifying pre-change behavior remains unaffected.
+
+Data Integrity
+
+	Cross-validate message between components:
+
+	Data entering DB matches GUI/API input (including UniqCltID)
+
+	Market broadcast data excludes UniqCltID
+
+	CSV report data includes correct client ID.
+
+---
+Q5:Question 4: Example Automated Test Case (Component 1)
+
+Test Case ID: TC_API_001
+
+Title:	Validate API accepts valid UniqCltID
+
+Component:	1 (Input Layer)
+
+Endpoint:	POST /api/v1/trade
+
+Payload:	{"Client":"Bob Smith","Company":"ABC","UniqCltID":"JPM000023789","Product":"ISX","Quantity":100,"Price":17}
+
+Expected Result:	201 Created
+
+Validations	
+ Status = 201	
+ UniqCltID matches regex ^[A-Z]{3}[0-9]{9}$	
+ Response echoes UniqCltID	
+ DB contains same UniqCltID after commit	
+ 
+ Code :
+import re
+def test_valid_uniqcltid(session, base_urls):
+    payload = {
+        "Client": "Bob Smith",
+        "Company": "ABC",
+        "UniqCltID": "JPM000023789",
+        "Product": "ISX",
+        "Quantity": 100,
+        "Price": 17
+    }
+    response = session.post(f"{base_urls['gorest']}/trades", json=payload)
+    assert response.status_code == 201
+    assert re.match(r"^[A-Z]{3}[0-9]{9}$", payload["UniqCltID"])
+
+---
+Q5: Challenges in Automating UniqCltID Validation
+
+Field Validation Rule | 3 letters + 9 digits regex | Pre-validate in automation via regex before API call 
+
+System Integration | Field must flow across multiple systems | Build chained tests verifying propagation 
+
+Data Masking| Ensure ID is stripped in broadcast | Mock listener in Component 2 and verify ID absence   
+
+Legacy Compatibility | Older messages missing ID  | Maintain dual-schema testing                      
+
+Environment Sync | Different systems might not update simultaneously | Use feature flags / version headers in API
+
+
+Trace
+
+GUI/API Input → DB | `UniqCltID` stored correctly  | DB record has full ID
+
+DB → CSV           | `UniqCltID` visible in report | Report row matches DB   
+
+API → Broadcast    | `UniqCltID` removed           | Message excludes client info 
+
+

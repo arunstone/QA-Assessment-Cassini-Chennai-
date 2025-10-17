@@ -1,0 +1,8 @@
+pytest>=7.0
+requests>=2.28
+pytest-xdist>=3.0
+pytest-html>=3.2
+python-dotenv>=1.0
+jsonschema>=4.0
+pytest-timeout>=2.2
+pytest-rerunfailures>=11.0
