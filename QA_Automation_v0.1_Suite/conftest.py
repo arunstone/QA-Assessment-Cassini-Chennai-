@@ -2,13 +2,9 @@ import os
 import pytest
 import requests
 from dotenv import load_dotenv
-from utils.config import ENDPOINTS
+from utils.validators import validate_schema
 
 load_dotenv()
-
-@pytest.fixture(scope="session")
-def base_urls():
-    return ENDPOINTS
 
 @pytest.fixture(scope="session")
 def headers():
@@ -23,5 +19,4 @@ def session():
 
 @pytest.fixture(scope="session")
 def jsonschema_validator():
-    from utils.validators import validate_schema
     return validate_schema
